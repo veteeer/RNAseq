@@ -20,8 +20,8 @@ rule fastqc:
     output:
         html_r1 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R1_fastqc.html"),
         html_r2 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R2_fastqc.html"),
-        zip_r1 = temp(os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R1_fastqc.zip")),
-        zip_r2 = temp(os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R2_fastqc.zip"))  
+        zip_r1 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R1_fastqc.zip"),
+        zip_r2 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R2_fastqc.zip")  
     params:
         outdir=os.path.join(OUT_DIR, "qc", "fastqc")
     threads: 
@@ -173,7 +173,7 @@ rule rustqc:
     shell:
         """
         rustqc rna {input.bam} --gtf {input.gtf} -p -o {params.prefix} --sample-name {wildcards.sample} \
-        -t {threads} -q --flat-output -c {params.yaml} 2> {log}
+        -t {threads} -q --flat-output -c {params.yaml} > {log} 2>&1
         """  
 
 rule multiqc:

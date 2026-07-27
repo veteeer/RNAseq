@@ -87,11 +87,29 @@ def get_star_input(wildcards, read):
         return expand(os.path.join(OUT_DIR, "{sample}_{lane}_{read}.trimmed.fastq.gz"), sample=wildcards.sample, lane=lanes, read=read)
     return [UNITS[wildcards.sample][lane][read] for lane in lanes]
 
+def all_fastqc():
+    out = []
+    for s in samples:
+        for lane in UNITS[s]:
+            for r in ['R1', 'R2']:
+                out.append(os.path.join(OUT_DIR, "qc/fastqc", f"{s}_{lane}_{r}_fastqc.zip"))
+    return out
+
+def all_fastp():
+    out = []
+    for s in samples:
+        for lane in UNITS[s]:
+            out.append(os.path.join(OUT_DIR, "qc/fastp", f"{s}_{lane}_fastp.json"))
+    return out
+
 def get_multiqc_input(wildcards):
     """
-    Returns Star, salmon, rustqc results for MultiQC
+    Return all QC and analysis outputs required by MultiQC.
     """
     inputs = []
+    inputs += all_fastqc()
+    if config['to_trim']:
+        inputs += all_fastp()
     inputs += expand(os.path.join(OUT_DIR, "star_align", "{sample}", "{sample}.Log.final.out"), sample=samples)
     inputs += expand(os.path.join(OUT_DIR, "salmon_counts", "{sample}", "quant.sf"), sample=samples)
     inputs += expand(os.path.join(OUT_DIR, "qc/rustqc", "{sample}"), sample=samples)
