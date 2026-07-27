@@ -12,19 +12,21 @@ wildcard_constraints:
     lane   = r"L\d+",
     rgroup = r"R[12]"
 
+def strip_fastq_ext(path):
+    """Basename without fastq extension"""
+    b = os.path.basename(path)
+    for ext in config['input']['fastq_extensions']:
+        if b.endswith(ext):
+            return b.split(ext)[0]
+    return b
+
 def filename_to_sample(name):
     '''
     Extracts sample name, lane, read group from fastq filename 
     :param: name: str, fastq filename
     :return: sample_name: str, lane: str, read group: str
     '''
-    basename = os.path.basename(name)
-
-    for ext in config['input']['fastq_extensions']:
-        if ext in basename: 
-            basename = basename.split(ext)[0]
-            break
-    
+    basename = strip_fastq_ext(name)    
     # sample with multi lanes
     m = re.search(r'_(L\d{3})_(R[12])', basename)
     if m:

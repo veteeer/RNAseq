@@ -1,22 +1,22 @@
 # input dir with fastq files
 input:
     input_folder: '/primary/data/bazarova.el/fastq/test' 
-    fastq_extensions: ['fastq.gz', 'fq.gz'] 
+    fastq_extensions: ['.fastq.gz', '.fq.gz'] 
 
 output: '/primary/data/bazarova.el/fastq/results'
 
 reference: '/primary/data/bazarova.el/RNAseq/reference'
 
-to_trim: True
+to_trim: False
 
 threads:
   fastqc: 2
   fastp: 4
   star_index: 8
-  star: 16
+  star: 12
   samtools: 8
-  salmon: 12
-  rustqc: 16
+  salmon: 8
+  rustqc: 10
 
 mem_mb:
    star: 40000 

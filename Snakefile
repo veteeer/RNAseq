@@ -23,7 +23,8 @@ rule fastqc:
         zip_r1 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R1_fastqc.zip"),
         zip_r2 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}_{lane}_R2_fastqc.zip")  
     params:
-        outdir=os.path.join(OUT_DIR, "qc", "fastqc")
+        r1_base = lambda wildcards, input: strip_fastq_ext(input.r1),
+        r2_base = lambda wildcards, input: strip_fastq_ext(input.r2)
     threads: 
         config["threads"]["fastqc"]
     log:
@@ -32,7 +33,15 @@ rule fastqc:
         "benchmarks/{sample}_{lane}.fastqc.tsv"
     shell:
         """
-        fastqc -t {threads} -o {params.outdir} {input.r1} {input.r2} > {log} 2>&1
+        tmpdir=$(mktemp -d)
+        trap 'rm -rf "$tmpdir"' EXIT
+
+        fastqc -t {threads} -o "$tmpdir" {input.r1} {input.r2} > {log} 2>&1
+
+        mv "$tmpdir/{params.r1_base}_fastqc.html" {output.html_r1}
+        mv "$tmpdir/{params.r1_base}_fastqc.zip"  {output.zip_r1}
+        mv "$tmpdir/{params.r2_base}_fastqc.html" {output.html_r2}
+        mv "$tmpdir/{params.r2_base}_fastqc.zip"  {output.zip_r2}
         """
 
 rule trim:
