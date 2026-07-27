@@ -1,0 +1,86 @@
+rna:
+  # Library settings
+  stranded: unstranded 
+  paired: true 
+
+  # Output settings
+  flat_output: false
+
+  # dupRadar output toggles
+  dupradar:
+    enabled: true
+    dup_matrix: true
+    intercept_slope: true
+    density_scatter_plot: true
+    boxplot: true
+    expression_histogram: true
+    multiqc_intercept: true
+    multiqc_curve: true
+
+  # featureCounts output toggles
+  featurecounts:
+    counts_file: false
+    summary_file: true
+    biotype_summary_file: true
+    biotype_counts: false
+    biotype_counts_mqc: true
+    biotype_rrna_mqc: true
+    biotype_attribute: "gene_biotype"
+
+  # RSeQC tool toggles and settings
+  bam_stat:
+    enabled: true
+  infer_experiment:
+    enabled: false
+    sample_size: 200000
+  read_duplication:
+    enabled: false
+  read_distribution:
+    enabled: true
+  junction_annotation:
+    enabled: false
+    min_intron: 50
+  junction_saturation:
+    enabled: false
+    seed: 42
+    min_coverage: 1
+    percentile_floor: 5
+    percentile_ceiling: 100
+    percentile_step: 5
+  inner_distance:
+    enabled: true
+    sample_size: 1000000
+    lower_bound: -250
+    upper_bound: 250
+    step: 5
+
+  # TIN (Transcript Integrity Number)
+  tin:
+    enabled: true
+    seed: 12345
+    sample_size: 100
+    min_coverage: 10
+
+  # Qualimap RNA-Seq QC
+  qualimap:
+    enabled: true
+
+  # Library complexity (preseq lc_extrap)
+  preseq:
+    enabled: true
+    max_extrap: 10000000000
+    step_size: 1000000
+    n_bootstraps: 100
+    confidence_level: 0.95
+    seed: 408
+    max_terms: 100
+    max_segment_length: 100000000
+    defects: false
+
+  # Samtools-compatible outputs
+  flagstat:
+    enabled: true
+  idxstats:
+    enabled: false
+  samtools_stats:
+    enabled: false
