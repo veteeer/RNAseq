@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: debian:bookworm-slim
+
+%environment
+    export PATH="/opt:${PATH}"
+
+%post
+    STAR_VERSION=2.7.11b
+
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+    
+    # install STAR
+    cd /opt
+    curl --retry 5 --retry-delay 10 --retry-max-time 60 -fLO https://github.com/alexdobin/STAR/releases/download/2.7.11b/STAR_${STAR_VERSION}.zip
+    unzip STAR_${STAR_VERSION}.zip && rm -f STAR_${STAR_VERSION}.zip
+    mv STAR_${STAR_VERSION}/Linux_x86_64_static/STAR /opt && \
+    rm -rf STAR_${STAR_VERSION}
+
+%runscript
+    exec /bin/bash "$@"
+
+%help
+    Container with STAR aligner for RNAseq pipeline.

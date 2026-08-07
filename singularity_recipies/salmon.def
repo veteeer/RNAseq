@@ -1,0 +1,8 @@
+Bootstrap: docker
+From: combinelab/salmon:2.3.3
+
+%runscript
+    exec /bin/bash "$@"
+
+%help
+    Container with Salmon tool for RNAseq pipeline.

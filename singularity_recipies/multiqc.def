@@ -1,0 +1,8 @@
+Bootstrap: docker
+From: multiqc/multiqc:v1.35
+
+%runscript
+    exec /bin/bash "$@"
+
+%help
+    Container with Multiqc tool for RNAseq pipeline.
