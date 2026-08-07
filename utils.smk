@@ -13,12 +13,13 @@ wildcard_constraints:
     rgroup = r"R[12]"
 
 def strip_fastq_ext(path):
-    """Basename without fastq extension"""
+    """
+    Returns basename without fastq extension
+    """
     b = os.path.basename(path)
     for ext in config['input']['fastq_extensions']:
         if b.endswith(ext):
             return b.split(ext)[0]
-    return b
 
 def filename_to_sample(name):
     '''
@@ -36,7 +37,6 @@ def filename_to_sample(name):
     m = re.search(r'_(R[12])', basename)
     if m:
         return basename[:m.start()], 'L000', m.group(1)
-    return basename
 
 
 def get_units(input_folder):
@@ -65,9 +65,7 @@ def get_units(input_folder):
                 clean.setdefault(sample, {})[lane] = reads
             else:
                 missing = {'R1', 'R2'} - set(reads)
-                logger.warning(
-                    f"Incomplete pair for {sample} {lane} (missing {missing}); lane skipped"
-                )
+                logger.warning(f"Incomplete pair for {sample} {lane} (missing {missing}); lane skipped")
     return clean
 
 
@@ -94,7 +92,7 @@ def all_fastqc():
     for s in samples:
         for lane in UNITS[s]:
             for r in ['R1', 'R2']:
-                out.append(os.path.join(OUT_DIR, "qc/fastqc", f"{s}_{lane}_{r}_fastqc.zip"))
+                out.append(os.path.join(OUT_DIR, "qc/fastqc", f"{s}", f"{s}_{lane}_{r}_fastqc.zip"))
     return out
 
 def all_fastp():
@@ -106,13 +104,13 @@ def all_fastp():
 
 def get_multiqc_input(wildcards):
     """
-    Return all QC and analysis outputs required by MultiQC.
+    Return all QC and analysis outputs for MultiQC.
     """
     inputs = []
     inputs += all_fastqc()
     if config['to_trim']:
         inputs += all_fastp()
-    inputs += expand(os.path.join(OUT_DIR, "star_align", "{sample}", "{sample}.Log.final.out"), sample=samples)
+    inputs += expand(os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.Log.final.out"), sample=samples)
     inputs += expand(os.path.join(OUT_DIR, "salmon_counts", "{sample}", "quant.sf"), sample=samples)
     inputs += expand(os.path.join(OUT_DIR, "qc/rustqc", "{sample}"), sample=samples)
     return inputs
