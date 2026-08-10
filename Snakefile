@@ -22,7 +22,7 @@ rule fastqc:
         html_r1 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}/{sample}_{lane}_R1_fastqc.html"),
         html_r2 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}/{sample}_{lane}_R2_fastqc.html"),
         zip_r1 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}/{sample}_{lane}_R1_fastqc.zip"),
-        zip_r2 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}/{sample}_{lane}_R2_fastqc.zip")  
+        zip_r2 = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}/{sample}_{lane}_R2_fastqc.zip")
     params:
         r1_base = lambda wildcards, input: strip_fastq_ext(input.r1),
         r2_base = lambda wildcards, input: strip_fastq_ext(input.r2)
@@ -30,6 +30,7 @@ rule fastqc:
         config["threads"]["fastqc"]
     log:
         os.path.join(LOG_DIR, "fastqc/{sample}_{lane}.log")
+    container: os.path.join(SING_DIR, "fastqc_0.12.1.sif")
     shell:
         """
         tmpdir=$(mktemp -d)
@@ -56,6 +57,7 @@ rule trim:
         config["threads"]["fastp"]
     log:
         os.path.join(LOG_DIR, "trim/{sample}_{lane}.log")
+    container: os.path.join(SING_DIR, "fastp_1.3.6.sif")
     shell:
         """
         fastp -i {input.r1} -I {input.r2} -o {output.trimmed_r1} -O {output.trimmed_r2} \
@@ -75,6 +77,7 @@ rule star_index:
         config['threads']['star_index']
     resources:
         mem_mb = int(config['mem_mb']['star'])
+    container: os.path.join(SING_DIR, "star_2.7.11b.sif")
     shell:
         """
         mkdir -p {output.index}
@@ -108,6 +111,7 @@ rule star:
         mem_mb = int(config['mem_mb']['star'])
     log:
         os.path.join(LOG_DIR, 'star/{sample}.log')
+    container: os.path.join(SING_DIR, "star_2.7.11b.sif")
     shell:
         """
         mkdir -p {params.outdir}
@@ -132,6 +136,7 @@ rule samtools:
         prefix = os.path.join(OUT_DIR, "star_output", "{sample}/{sample}")
     threads:
         config['threads']['samtools']
+    container: os.path.join(SING_DIR, "samtools_1.23.1.sif")
     shell:
         """
         samtools collate -@ {threads} -Ou {input.bam} | samtools fixmate -@ {threads} -m -u - - | samtools sort -@ {threads} -u - | samtools markdup -@ {threads} - {params.prefix}.sorted.markdup.bam
@@ -144,13 +149,15 @@ rule salmon:
         transcriptome = os.path.join(REF_DIR, "transcriptome.fa"),
         gtf = os.path.join(REF_DIR, "genes.gtf")
     output:
-        quant = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.sf")
+        quant = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.sf"),
+        logs = directory(os.path.join(OUT_DIR, "salmon_counts", "{sample}/logs"))
     params:
         outdir = os.path.join(OUT_DIR, "salmon_counts", "{sample}")
     threads:
         config['threads']['salmon']        
     log:
         os.path.join(LOG_DIR, "salmon/{sample}.log")
+    container: os.path.join(SING_DIR, "salmon_2.3.3.sif")
     shell:
         """
         salmon quant -a {input.bam} -t {input.transcriptome} -o {params.outdir} \
@@ -172,6 +179,7 @@ rule rustqc:
         config['threads']['rustqc']
     log:
         os.path.join(LOG_DIR, "rustqc/{sample}.log")
+    container: os.path.join(SING_DIR, "rustqc_0.2.1.sif")
     shell:
         """
         rustqc rna {input.bam} --gtf {input.gtf} -p -o {params.prefix} --sample-name {wildcards.sample} \
@@ -180,17 +188,20 @@ rule rustqc:
 
 rule multiqc_per_sample:
     input: 
-        fastqc = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}"),
-        fastp = os.path.join(OUT_DIR, "qc", "fastp", "{sample}") if config['to_trim'] else [],
-        star = os.path.join(OUT_DIR, "star_output", "{sample}"),
-        salmon = os.path.join(OUT_DIR, "salmon_counts", "{sample}"),
+        fastqc = lambda wc: expand(os.path.join(OUT_DIR, "qc", "fastqc","{sample}/{sample}_{lane}_{read}_fastqc.zip"),
+            sample=wc.sample,lane=list(UNITS[wc.sample].keys()), read=["R1", "R2"]),
+        fastp = lambda wc: expand(os.path.join(OUT_DIR, "qc", "fastp", "{sample}/{sample}_{lane}_fastp.json"),
+            sample=wc.sample, lane=list(UNITS[wc.sample].keys())) if config['to_trim'] else [],
+        star = os.path.join(OUT_DIR, "star_output", "{sample}/{sample}.Log.final.out"),
+        salmon = os.path.join(OUT_DIR, "salmon_counts", "{sample}/logs"),
         rustqc = os.path.join(OUT_DIR, "qc", "rustqc", "{sample}")
     output:
-        report = os.path.join(OUT_DIR, "qc/multiqc_{sample}.html")
+        report = os.path.join(OUT_DIR, "qc/multiqc/multiqc_{sample}.html")
     params:
-        outdir = os.path.join(OUT_DIR, "qc")
+        outdir = os.path.join(OUT_DIR, "qc/multiqc")
     log:
         os.path.join(LOG_DIR, "multiqc_{sample}.log")
+    container: os.path.join(SING_DIR, "multiqc_1.35.sif")
     shell:
         """
         multiqc {input} -o {params.outdir} -n {output.report} -f > {log} 2>&1
@@ -206,6 +217,7 @@ rule multiqc:
         outdir = os.path.join(OUT_DIR, "qc")
     log:
         os.path.join(LOG_DIR, "multiqc.log")
+    container: os.path.join(SING_DIR, "multiqc_1.35.sif")
     shell:
         """
         multiqc {params.indir} -o {params.outdir} -n multiqc_summary.html -f > {log} 2>&1

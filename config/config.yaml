@@ -3,11 +3,13 @@ input:
     input_folder: '/primary/data/bazarova.el/fastq/test' 
     fastq_extensions: ['.fastq.gz', '.fq.gz'] 
 
-output: '/primary/data/bazarova.el/fastq/results'
+output: '/primary/data/bazarova.el/fastq/results_containers'
 
 reference: '/primary/data/bazarova.el/RNAseq/reference'
 
-to_trim: False
+containers_path: '/primary/data/bazarova.el/RNAseq/singularity_containers'
+
+to_trim: True
 
 threads:
   fastqc: 2

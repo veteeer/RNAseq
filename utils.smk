@@ -6,6 +6,7 @@ INPUT_DIR= config['input']['input_folder']
 OUT_DIR = config['output']
 REF_DIR = config['reference']
 LOG_DIR   = os.path.join(OUT_DIR, "logs")
+SING_DIR = config['containers_path']
 
 wildcard_constraints:
     sample = r"[^/.]+",
@@ -84,7 +85,7 @@ def get_star_input(wildcards, read):
     """
     lanes = sorted(UNITS[wildcards.sample].keys())
     if config['to_trim']:
-        return expand(os.path.join(OUT_DIR, "{sample}_{lane}_{read}.trimmed.fastq.gz"), sample=wildcards.sample, lane=lanes, read=read)
+        return expand(os.path.join(OUT_DIR, "{sample}_{lane}_{r}.trimmed.fastq.gz"), sample=wildcards.sample, lane=lanes, r=read)
     return [UNITS[wildcards.sample][lane][read] for lane in lanes]
 
 def all_fastqc():
@@ -99,7 +100,7 @@ def all_fastp():
     out = []
     for s in samples:
         for lane in UNITS[s]:
-            out.append(os.path.join(OUT_DIR, "qc/fastp", f"{s}_{lane}_fastp.json"))
+            out.append(os.path.join(OUT_DIR, "qc/fastp", f"{s}", f"{s}_{lane}_fastp.json"))
     return out
 
 def get_multiqc_input(wildcards):
