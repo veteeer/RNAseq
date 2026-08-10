@@ -97,7 +97,7 @@ rule star:
         index = os.path.join(REF_DIR, 'STAR_index')
     output:
         bam = temp(os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.Aligned.out.bam")),
-        transcriptome_bam = os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.Aligned.toTranscriptome.out.bam"),
+        transcriptome_bam = temp(os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.Aligned.toTranscriptome.out.bam")),
         log = os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.Log.final.out"),
         sj = os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.SJ.out.tab")
     params:
