@@ -99,7 +99,7 @@ def all_fastp():
     out = []
     for s in samples:
         for lane in UNITS[s]:
-            out.append(os.path.join(OUT_DIR, "qc/fastp", f"{s}_{lane}_fastp.json"))
+            out.append(os.path.join(OUT_DIR, "qc/fastp", f"{s}", f"{s}_{lane}_fastp.json"))
     return out
 
 def get_multiqc_input(wildcards):

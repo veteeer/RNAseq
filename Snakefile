@@ -11,7 +11,7 @@ rule all:
     input:
         bam = expand(os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.sorted.markdup.bam"), sample=samples),
         quant = expand(os.path.join(OUT_DIR, "salmon_counts", "{sample}", "quant.sf"), sample=samples),
-        multiqc_report = expand(os.path.join(OUT_DIR, "qc/multiqc_{sample}.html"),sample=samples),
+        multiqc_report = expand(os.path.join(OUT_DIR, "qc/multiqc/multiqc_{sample}.html"),sample=samples),
         multiqc_summary = os.path.join(OUT_DIR, "qc/multiqc_summary.html")
 
 rule fastqc:
@@ -144,7 +144,9 @@ rule salmon:
         transcriptome = os.path.join(REF_DIR, "transcriptome.fa"),
         gtf = os.path.join(REF_DIR, "genes.gtf")
     output:
-        quant = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.sf")
+        quant = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.sf"),
+        genes = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.genes.sf"),
+        logs = directory(os.path.join(OUT_DIR, "salmon_counts", "{sample}/logs"))
     params:
         outdir = os.path.join(OUT_DIR, "salmon_counts", "{sample}")
     threads:
@@ -180,17 +182,19 @@ rule rustqc:
 
 rule multiqc_per_sample:
     input: 
-        fastqc = os.path.join(OUT_DIR, "qc", "fastqc", "{sample}"),
-        fastp = os.path.join(OUT_DIR, "qc", "fastp", "{sample}") if config['to_trim'] else [],
-        star = os.path.join(OUT_DIR, "star_output", "{sample}"),
-        salmon = os.path.join(OUT_DIR, "salmon_counts", "{sample}"),
+        fastqc = lambda wc: expand(os.path.join(OUT_DIR, "qc", "fastqc","{sample}/{sample}_{lane}_{read}_fastqc.zip"),
+            sample=wc.sample,lane=list(UNITS[wc.sample].keys()), read=["R1", "R2"]),
+        fastp = lambda wc: expand(os.path.join(OUT_DIR, "qc", "fastp", "{sample}/{sample}_{lane}_fastp.json"),
+            sample=wc.sample, lane=list(UNITS[wc.sample].keys())) if config['to_trim'] else [],
+        star = os.path.join(OUT_DIR, "star_output", "{sample}/{sample}.Log.final.out"),
+        salmon = os.path.join(OUT_DIR, "salmon_counts", "{sample}/logs"),
         rustqc = os.path.join(OUT_DIR, "qc", "rustqc", "{sample}")
     output:
-        report = os.path.join(OUT_DIR, "qc/multiqc_{sample}.html")
+        report = os.path.join(OUT_DIR, "qc/multiqc/multiqc_{sample}.html")
     params:
-        outdir = os.path.join(OUT_DIR, "qc")
+        outdir = os.path.join(OUT_DIR, "qc/multiqc")
     log:
-        os.path.join(LOG_DIR, "multiqc_{sample}.log")
+        os.path.join(LOG_DIR, "multiqc", "{sample}.log")
     shell:
         """
         multiqc {input} -o {params.outdir} -n {output.report} -f > {log} 2>&1
