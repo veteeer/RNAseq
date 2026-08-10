@@ -11,7 +11,7 @@ rule all:
     input:
         bam = expand(os.path.join(OUT_DIR, "star_output", "{sample}", "{sample}.sorted.markdup.bam"), sample=samples),
         quant = expand(os.path.join(OUT_DIR, "salmon_counts", "{sample}", "quant.sf"), sample=samples),
-        multiqc_report = expand(os.path.join(OUT_DIR, "qc/multiqc_{sample}.html"),sample=samples),
+        multiqc_report = expand(os.path.join(OUT_DIR, "qc/multiqc/{sample}.html"),sample=samples),
         multiqc_summary = os.path.join(OUT_DIR, "qc/multiqc_summary.html")
 
 rule fastqc:
@@ -150,6 +150,7 @@ rule salmon:
         gtf = os.path.join(REF_DIR, "genes.gtf")
     output:
         quant = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.sf"),
+        genes = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.genes.sf"),
         logs = directory(os.path.join(OUT_DIR, "salmon_counts", "{sample}/logs"))
     params:
         outdir = os.path.join(OUT_DIR, "salmon_counts", "{sample}")
@@ -196,11 +197,11 @@ rule multiqc_per_sample:
         salmon = os.path.join(OUT_DIR, "salmon_counts", "{sample}/logs"),
         rustqc = os.path.join(OUT_DIR, "qc", "rustqc", "{sample}")
     output:
-        report = os.path.join(OUT_DIR, "qc/multiqc/multiqc_{sample}.html")
+        report = os.path.join(OUT_DIR, "qc/multiqc/{sample}.html")
     params:
         outdir = os.path.join(OUT_DIR, "qc/multiqc")
     log:
-        os.path.join(LOG_DIR, "multiqc_{sample}.log")
+        os.path.join(LOG_DIR, "multiqc", "{sample}.log")
     container: os.path.join(SING_DIR, "multiqc_1.35.sif")
     shell:
         """
