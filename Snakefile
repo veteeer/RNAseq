@@ -223,3 +223,18 @@ rule multiqc:
         """
         multiqc {params.indir} -o {params.outdir} -n multiqc_summary.html -f > {log} 2>&1
         """
+
+rule predict:
+    input:
+        quant = os.path.join(OUT_DIR, "salmon_counts", "{sample}/quant.genes.sf")
+    output:
+        matrix = os.path.join(OUT_DIR, "PAM50_prediction", "{sample}_tpm.tsv"),
+        pred = os.path.join(OUT_DIR, "PAM50_prediction", "{sample}_pred_subtype.txt"),
+        pred_proba = os.path.join(OUT_DIR, "PAM50_prediction", "{sample}_pred_proba.tsv")
+    params:
+        prefix = os.path.join(OUT_DIR, "PAM50_prediction", "{sample}")
+    container: os.path.join(SING_DIR, "python_3.13.sif")
+    shell:
+        """
+        python predict_subtype.py --input {input.quant} --refdir {REF_DIR} --prefix {params.prefix}
+        """

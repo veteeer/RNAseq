@@ -1,0 +1,24 @@
+Bootstrap: docker
+From: python:3.13-slim-bookworm
+
+%files
+    ./config/requirements.txt /opt/requirements.txt
+
+%post
+    #install system packages
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libgomp1 \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+    # Upgrade pip and install Python packages
+    pip install --upgrade pip setuptools wheel
+    pip install -r /opt/requirements.txt
+    rm -f /opt/requirements.txt
+
+%runscript
+    exec "$@"
+
+%help
+    Python 3.13 environment.
