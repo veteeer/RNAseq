@@ -228,5 +228,5 @@ rule predict:
         prefix = os.path.join(OUT_DIR, "PAM50_prediction", "{sample}")
     shell:
         """
-        python convert.py --input {input.quant} --refdir {REF_DIR} --prefix {params.prefix}
+        python predict_subtype.py --input {input.quant} --refdir {REF_DIR} --prefix {params.prefix}
         """
